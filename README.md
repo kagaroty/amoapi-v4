@@ -215,7 +215,7 @@ $api->notes($entity_type);
 $api->events();
 $api->widgets();
 $api->webhooks();
-$api->salesbot();
+$api->bots();
 ```
 Установка параметров
 ```php
@@ -566,10 +566,11 @@ $webhook = $this->crm->webhooks()->subscribe($some_url, ['note_lead','note_conta
 $result = $this->crm->webhooks()->unsubscribe($some_url);
 ```
 
-#### Salesbot
+#### Bots
 ```php
-// запуск Salesbot (до 100 задач за запрос)
-$is_started = $api->salesbot()->run([
+// запуск Bot (до 100 задач за запрос)
+// вариант 1: массив задач
+$is_started = $api->bots()->run([
     [
         'bot_id' => 565,
         'entity_id' => 76687686,
@@ -577,8 +578,15 @@ $is_started = $api->salesbot()->run([
     ],
 ]);
 
-// остановка Salesbot для сделки
-$is_stopped = $api->salesbot()->stop(
+// вариант 2: 3 параметра (bot_id, entity_id, entity_type)
+$is_started = $api->bots()->run(
+    $bot_id = 565,
+    $entity_id = 76687686,
+    $entity_type = 'contacts' // leads|contacts|customers
+);
+
+// остановка Bot для сделки
+$is_stopped = $api->bots()->stop(
     $bot_id = 565,
     $entity_id = 23890022,
     $entity_type = 'leads' // leads|customers
