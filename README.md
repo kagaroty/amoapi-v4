@@ -48,12 +48,6 @@ foreach ($leads as $lead) {
 }
 ```
 
-Подробнее: [Конфигурация](docs/configuration.md).
-
-Тесты: [docs/tests.md](docs/tests.md).
-
----
-
 ## 📚 Документация
 
 | Раздел | Описание |
