@@ -135,7 +135,7 @@ $api->cache->setTtl([
 
 ### Файловое хранение кеша
 
-Используется по умолчанию: `/src/Temp/{domain}/{client_id}.{key}.cache`
+Используется по умолчанию: `/src/Temp/{domain}/{client_id}-{key}.cache`
 
 ```php
 $api->cache->setStorageFiles('/path/to/cache/storage', [
@@ -147,10 +147,44 @@ $api->cache->setStorageFiles('/path/to/cache/storage', [
 ### Очистка кеша
 
 ```php
-$api->cache->clear('account');
-$api->cache->clear('customFields');
-$api->cache->clear('taskTypes');
+$api->cache->clear();            // весь кеш текущих domain + client_id
+$api->cache->clear('pipelines'); // конкретный ключ
 ```
+
+Очистка затрагивает оба слоя: локальный кеш в памяти процесса и постоянное хранилище
+(файлы `{path}/{domain}/{client_id}-{key}.cache` либо ключи Redis `{domain}:{client_id}:{key}`).
+
+Ключи без параметров:
+
+```php
+$api->cache->clear('account');      // только account() без $with
+$api->cache->clear('users');        // только users() без $with
+$api->cache->clear('pipelines');
+$api->cache->clear('catalogs');
+$api->cache->clear('sources');
+$api->cache->clear('userGroups');
+$api->cache->clear('taskTypes');
+$api->cache->clear('lossReasons');
+```
+
+Методы с аргументами кешируются под составным ключом, и его нужно указывать целиком:
+
+```php
+$api->cache->customFields('leads');     // ключ customFields-leads
+$api->cache->clear('customFields-leads');
+
+$api->cache->eventTypes('ru');          // ключ eventTypes-ru
+$api->cache->clear('eventTypes-ru');
+
+$api->cache->account(['task_types']);   // ключ account-task_types
+$api->cache->clear('account-task_types');
+
+$api->cache->users(['role']);           // ключ users-role
+$api->cache->clear('users-role');
+```
+
+`clear('customFields')` или `clear('eventTypes')` в этом случае ничего не удалят —
+для сброса всех вариантов используйте `clear()` без аргумента.
 
 ### Redis
 
