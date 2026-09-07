@@ -84,7 +84,8 @@ class ApiClient
 		'query_retries' => 7,
 		'timezone' => null,
 		'lang' => 'ru',
-		'user_agent' => 'Amoapi v4'
+		'user_agent' => 'Amoapi v4',
+		'context_user_id' => null
 	];
 	protected $_integration = [];
 	protected $_timezone = null;
@@ -119,6 +120,32 @@ class ApiClient
 			$query->setUrl($url);
 		}
 		return $query;
+	}
+
+	/**
+	 * Set context user for all queries (X-Context-User-ID)
+	 * https://www.amocrm.ru/developers/content/oauth/scopes
+	 * @param int|null $user_id - null resets context user
+	 * @return ApiClient
+	 */
+	public function asUser($user_id = null)
+	{
+		if (is_null($user_id)) {
+			return $this->setParam('context_user_id', null);
+		}
+		if (!is_numeric($user_id) || (int) $user_id < 1) {
+			throw new \InvalidArgumentException('Context user ID must be a positive integer');
+		}
+		return $this->setParam('context_user_id', (int) $user_id);
+	}
+
+	/**
+	 * Get context user of all queries
+	 * @return int|null
+	 */
+	public function getContextUser()
+	{
+		return $this->getParam('context_user_id');
 	}
 
 	/**
