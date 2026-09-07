@@ -38,6 +38,7 @@ echo json_encode([
 	'method' => $method,
 	'body' => $body,
 	'path' => parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH),
+	'context_user' => $_SERVER['HTTP_X_CONTEXT_USER_ID'] ?? null,
 ], JSON_UNESCAPED_UNICODE);
 PHP);
 

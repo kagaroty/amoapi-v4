@@ -45,15 +45,31 @@ class Response
 			throw new Exceptions\UnauthorizedException($response->detail, $this->getCode());
 		}
 		if ($this->getCode() === 400 && property_exists($response, 'detail')) {
-			$val_errors = $response->{'validation-errors'} ?? [];
-			if ($row = current($val_errors)) {
-				$response->detail .= ': '.json_encode($row->errors);
-			}
-			throw new Exceptions\ValidatorException($response->detail, $this->getCode());
+			throw new Exceptions\ValidatorException($this->validationMessage($response), $this->getCode());
 		}
 		return $response;
 	}
-	
+
+    /**
+     * Build error message from response detail, validation-errors and errors.
+     * amoCRM often answers with a stub detail like "Invalid request body",
+     * while the real reason (e.g. "Not enough rights") is in the errors key.
+	 * @param object $response
+	 * @return string
+     */
+	private function validationMessage($response)
+	{
+		$msg = property_exists($response, 'detail') ? $response->detail : 'Invalid API response';
+		$val_errors = $response->{'validation-errors'} ?? [];
+		if ($row = current($val_errors)) {
+			$msg .= ': '.json_encode($row->errors);
+		}
+		if (property_exists($response, 'errors') && !empty($response->errors)) {
+			$msg .= ': '.json_encode($response->errors, JSON_UNESCAPED_UNICODE);
+		}
+		return $msg;
+	}
+
     /**
      * Get json decoded and validate entities
 	 * @param string $entity_key
@@ -79,12 +95,8 @@ class Response
 	public function validatedCreatedEntities(string $entity_key)
 	{
 		$validated = $this->validated();
-		if (property_exists($validated, 'validation-errors') && property_exists($validated, 'detail')) {
-			$msg = $validated->detail;
-			if ($first_err = current($validated->{'validation-errors'})) {
-				$msg .= ': '.json_encode($first_err->errors);
-			}
-			throw new Exceptions\ValidatorException($msg, $this->getCode());
+		if (!empty($validated->{'validation-errors'} ?? null) || !empty($validated->errors ?? null)) {
+			throw new Exceptions\ValidatorException($this->validationMessage($validated), $this->getCode());
 		}
 		return $this->validatedEntities($entity_key);
 	}
@@ -97,12 +109,8 @@ class Response
 	public function validatedUpdatedEntity($entity_id)
 	{
 		$validated = $this->validated();
-		if (property_exists($validated, 'validation-errors') && property_exists($validated, 'detail')) {
-			$msg = $validated->detail;
-			if ($first_err = current($validated->{'validation-errors'})) {
-				$msg .= ': '.json_encode($first_err->errors);
-			}
-			throw new Exceptions\ValidatorException($msg, $this->getCode());
+		if (!empty($validated->{'validation-errors'} ?? null) || !empty($validated->errors ?? null)) {
+			throw new Exceptions\ValidatorException($this->validationMessage($validated), $this->getCode());
 		}
 		if (!property_exists($validated, 'id') || $validated->id !== $entity_id) {
 			throw new Exceptions\AmoException('Invalid API response for update entity, id not found or not match, code: '.$this->getCode(), $this->getCode());
@@ -118,12 +126,8 @@ class Response
 	public function validatedUpdatedEntities(string $entity_key)
 	{
 		$validated = $this->validated();
-		if (property_exists($validated, 'validation-errors') && property_exists($validated, 'detail')) {
-			$msg = $validated->detail;
-			if ($first_err = current($validated->{'validation-errors'})) {
-				$msg .= ': '.json_encode($first_err->errors);
-			}
-			throw new Exceptions\ValidatorException($msg, $this->getCode());
+		if (!empty($validated->{'validation-errors'} ?? null) || !empty($validated->errors ?? null)) {
+			throw new Exceptions\ValidatorException($this->validationMessage($validated), $this->getCode());
 		}
 		return $this->validatedEntities($entity_key);
 	}

@@ -57,6 +57,7 @@ class StubQuery extends Query
 			'Authorization',
 			$oauth['token_type'] . ' ' . $oauth['access_token']
 		);
+		$this->applyContextUser();
 		$this->generateHash();
 		if ($this->retries === 1) {
 			$instance->callbacks->trigger('query.request.before', $this);

@@ -27,7 +27,8 @@ class Query
 		'hash',
 		'memory_usage',
 		'headers',
-		'retries'
+		'retries',
+		'context_user_id'
 	],
 	$hidden = [
 		'client_id',
@@ -253,6 +254,52 @@ class Query
 	}
 
 	/**
+	 * Set request context user, https://www.amocrm.ru/developers/content/oauth/scopes
+	 * @param int|null $user_id - null disables account context user for this query
+	 * @return Query
+	 */
+	public function setContextUser($user_id)
+	{
+		if (is_null($user_id)) {
+			$this->attributes['context_user_id'] = false;
+			return $this;
+		}
+		if (!is_numeric($user_id) || (int) $user_id < 1) {
+			throw new \InvalidArgumentException('Context user ID must be a positive integer');
+		}
+		$this->attributes['context_user_id'] = (int) $user_id;
+		return $this;
+	}
+
+	/**
+	 * Get request context user, query value or instance value
+	 * @return int|null
+	 */
+	public function getContextUser()
+	{
+		$user_id = $this->attributes['context_user_id'];
+		if ($user_id === false) {
+			return null;
+		}
+		if (is_null($user_id)) {
+			$user_id = $this->instance->getParam('context_user_id');
+		}
+		return $user_id ? (int) $user_id : null;
+	}
+
+	/**
+	 * Set context user header
+	 * @return Query
+	 */
+	protected function applyContextUser()
+	{
+		if ($user_id = $this->getContextUser()) {
+			$this->setHeader('X-Context-User-ID', $user_id);
+		}
+		return $this;
+	}
+
+	/**
 	 * Get url link
 	 * @return string
 	 */
@@ -296,6 +343,7 @@ class Query
 			'Authorization',
 			$oauth['token_type'] . ' ' . $oauth['access_token']
 		);
+		$this->applyContextUser();
 		$this->generateHash();
 		if ($this->retries === 1) {
 			$instance->callbacks->trigger('query.request.before', $this);
@@ -457,6 +505,7 @@ class Query
 		$instance = $this->instance;
 		if (!$this->attributes['hash']) {
 			$args = $this->args;
+			$context_user = $this->getContextUser();
 			$this->attributes['hash'] = hash(
 				'fnv1a64',
 				$instance->getIntegration('domain') .
@@ -465,7 +514,8 @@ class Query
 				$this->method .
 				json_encode($args) .
 				json_encode($this->post_data) .
-				json_encode($this->json_data)
+				json_encode($this->json_data) .
+				($context_user ? '|ctx:' . $context_user : '')
 			);
 		}
 		return $this->attributes['hash'];

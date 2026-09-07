@@ -23,5 +23,6 @@ $types = $api->events()->types('ru');
 $types = $api->cache->eventTypes(); // текущий язык по умолчанию
 $types = $api->cache->eventTypes('en');
 
-$api->cache->clear('eventTypes');
+$api->cache->clear('eventTypes-ru'); // ключ включает язык
+$api->cache->clear();          // либо весь кеш целиком
 ```

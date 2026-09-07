@@ -26,5 +26,7 @@ $taskTypes = $api->cache->taskTypes();
 $eventTypes = $api->cache->eventTypes($lang = null); // текущий язык по умолчанию
 
 // очистка кеша
-$api->cache->clear('account');
+$api->cache->clear('account');    // сам аккаунт
+$api->cache->clear('userGroups'); // группы пользователей
+$api->cache->clear('taskTypes');  // типы задач
 ```
