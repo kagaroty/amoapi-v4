@@ -58,6 +58,32 @@ class ResponseTest extends TestCase
 		$response->validated();
 	}
 
+	public function testValidatedThrowsValidatorExceptionWithErrorsKey(): void
+	{
+		$api = $this->makeApiClient();
+		$response = ResponseFactory::make($api, [
+			'errors' => ['25489347' => 'Not enough rights'],
+			'detail' => 'Invalid request body',
+		], 400);
+
+		$this->expectException(ValidatorException::class);
+		$this->expectExceptionMessage('Invalid request body: {"25489347":"Not enough rights"}');
+		$response->validated();
+	}
+
+	public function testValidatedUpdatedEntityThrowsOnErrorsKey(): void
+	{
+		$api = $this->makeApiClient();
+		$response = ResponseFactory::make($api, [
+			'id' => 25489347,
+			'errors' => ['25489347' => 'Not enough rights'],
+		], 200);
+
+		$this->expectException(ValidatorException::class);
+		$this->expectExceptionMessage('Not enough rights');
+		$response->validatedUpdatedEntity(25489347);
+	}
+
 	public function testValidatedEntities(): void
 	{
 		$api = $this->makeApiClient();
